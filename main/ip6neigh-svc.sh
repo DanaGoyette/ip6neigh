@@ -251,8 +251,8 @@ logmsg() {
 		echo "$(date) $1" >> "$LOG"
 	fi
 	
-	#If -e argument was present, echo to stdout.
-	[ "$ECHO" = 1 ] && echo "$1"
+	#If -e argument was present, echo to stderr.
+	[ "$ECHO" = 1 ] && echo "$1" >&2
 	
 	return 0
 }
