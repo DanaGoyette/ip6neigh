@@ -755,7 +755,7 @@ add_static() {
 	echo "${addr} ${name}${suffix}" >> "$HOSTS_FILE"
 	
 	#Adds a permanent entry in the neighbors table if requested to do so.
-	[ "$perm" -gt 0 ] && ip -6 neigh replace "$addr" lladdr "$mac" dev "$LAN_DEV" nud perm
+	[ -n "$perm" ] && [ "$perm" -gt 0 ] && ip -6 neigh replace "$addr" lladdr "$mac" dev "$LAN_DEV" nud perm
 	
 	return 0
 }
