@@ -764,13 +764,14 @@ add_static() {
 #Process entry in /etc/config/dhcp
 config_host() {
 	#Load basic options
+	local section="$1"
 	local name
-	local mac
-	config_get name "$1" name
-	config_get mac "$1" mac
+	#local mac
+	config_get name "$section" name
+	config_get macs "$section" mac
 	
 	#Ignore entry if the minimum required options are missing.
-	if [ -z "$name" ] || [ -z "$mac" ]; then
+	if [ -z "$name" ] || [ -z "$macs" ]; then
 		return 0;
 	fi
 	
@@ -779,10 +780,17 @@ config_host() {
 	local duid
 	local slaac
 	local perm
-	config_get ip "$1" ip
-	config_get duid "$1" duid
-	config_get slaac "$1" slaac "0"
-	config_get perm "$1" perm 0
+	config_get ip "$section" ip
+	config_get duid "$section" duid
+	config_get slaac "$section" slaac "0"
+	config_get perm "$section" perm 0
+
+	config_list_foreach "$section" mac config_host_mac
+}
+
+# Configure the given mac, using the $section variable from the parent scope
+config_host_mac() {
+	local mac="$1"
 	
 	#Converts user typed MAC to lowercase
 	mac=$(echo "$mac" | awk '{print tolower($0)}')
@@ -834,10 +842,10 @@ config_host() {
 	local lla_iid
 	local ula_iid
 	local gua_iid
-	config_get lla_iid "$1" lla_iid "$iid"
-	config_get ula_iid "$1" ula_iid "$iid"
-	config_get wula_iid "$1" wula_iid "$iid"
-	config_get gua_iid "$1" gua_iid "$iid"
+	config_get lla_iid "$section" lla_iid "$iid"
+	config_get ula_iid "$section" ula_iid "$iid"
+	config_get wula_iid "$section" wula_iid "$iid"
+	config_get gua_iid "$section" gua_iid "$iid"
 
 	#Creates hosts file entries with link-local, ULA and GUA prefixes with corresponding IIDs.
 	local addr
