@@ -189,15 +189,13 @@ rename() {
 
 	#Must save changes to another temp file and then move it over the main file.
 	#Change name in-place with SED
-	sed -i.bak "s/ ${oldname}/ ${newname}/g" "$HOSTS_FILE"
-        rm -f "$HOSTS_FILE.bak"
+	sed -i "s/ ${oldname}/ ${newname}/g" "$HOSTS_FILE"
 
 	#Deletes the old cached entry if dynamic.
 	# Delete with SED
-	sed -i.bak "/0. ${oldname}$/d" "$CACHE_FILE"
-        rm -f "$CACHE_FILE.bak"
+	sed -i "/0. ${oldname}$/d" "$CACHE_FILE"
 
-	logmsg "Renamed host: $oldname to $newname"
+	logmsg "Renamed host: '$oldname' to '$newname'"
 	reload_pending=1
 	return 0
 }
@@ -537,18 +535,21 @@ get_name() {
 	local addr="$1"
 	local matched
 	
-	#Check if the address already exists
-	matched=$(grep -m 1 "^$addr[ ,"$'\t'"]" /tmp/hosts/*)
-	
+	#Check if the address already exists (in any hosts file)
+	matched=$(grep "^$addr"$'[ ,\t]' /tmp/hosts/*)
+
 	#Address is new? (not found)
 	[ "$?" != 0 ] && return 2
-	
+
+	#In case there's more than one match, use the first, likely by filename
+	matched=$(printf '%s' "$matched" | head -n1)
+
 	#Check what kind of name it has
 	local fqdn=$(echo "$matched" | tr $'\t' ' ' | cut -d ' ' -f2)
 	local name=$(echo "$fqdn" | cut -d '.' -f1)
 	
-	#Outputs the name
-	echo "$name"
+	#Output the name
+	printf '%s' "$name"
 	
 	#Manufacturer name?
 	grep -q "01 ${name}$" "$CACHE_FILE" && return 1
@@ -618,7 +619,7 @@ process() {
 					name=$(create_name "$mac" 0)
 					if [ "$?" = 0 ]; then
 						#Success creating name. Replaces the unknown name.
-						logmsg "Unknown host $currname now has got a proper name. Replacing all entries."
+						logmsg "Unknown host '$currname' now has a proper name. Replacing all entries with '$name'."
 						rename "$currname" "$name"
 					fi
 
